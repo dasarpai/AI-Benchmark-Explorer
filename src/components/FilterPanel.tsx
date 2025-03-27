@@ -3,8 +3,6 @@ import {
   Box,
   Typography,
   Checkbox,
-  FormGroup,
-  FormControlLabel,
   TextField,
   InputAdornment,
   Accordion,
