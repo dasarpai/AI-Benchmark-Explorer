@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { 
   Dialog, 
   DialogTitle, 
@@ -24,44 +24,32 @@ interface DatasetDetailProps {
   onClose: () => void;
 }
 
+// Helper function moved outside the component to avoid hooks rule issues
+const formatTasks = (tasks?: string): string[] => {
+  if (!tasks) return [];
+  return tasks.split(',').map(task => task.trim()).filter(Boolean);
+};
+
+// Helper function to format benchmark URLs
+const formatBenchmarkUrls = (benchmarkUrls?: string) => {
+  if (!benchmarkUrls) return [];
+  
+  return benchmarkUrls
+    .split(',')
+    .map(url => url.trim())
+    .filter(Boolean)
+    .map(url => ({
+      url: `https://paperswithcode.com/sota/${url}`,
+      name: url.split('/').pop() || url
+    }));
+};
+
 const DatasetDetail: React.FC<DatasetDetailProps> = ({ dataset, isOpen, onClose }) => {
-  if (!dataset) return null;
-
-  const {
-    dataset_id,
-    description,
-    task,
-    subtask,
-    associated_tasks,
-    modalities,
-    homepage_url,
-    pwc_url,
-    year_published,
-    area,
-    dataset_size,
-    license,
-    languages,
-    paper_url,
-  } = dataset;
-
-  const formatTasks = (tasks: string) => {
-    if (!tasks) return [];
-    return tasks.split(',').map(task => task.trim()).filter(Boolean);
-  };
-
-  const associatedTasks = formatTasks(associated_tasks);
-  const modalitiesList = formatTasks(modalities);
-
-  return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      scroll="paper"
-    >
+  // Render nothing if no dataset (but after hooks would be called)
+  const dialogContent = !dataset ? null : (
+    <>
       <DialogTitle sx={{ pr: 6 }}>
-        <Typography variant="h5">{dataset_id}</Typography>
+        <Typography variant="h5">{dataset.dataset_id}</Typography>
         <IconButton
           aria-label="close"
           onClick={onClose}
@@ -77,15 +65,15 @@ const DatasetDetail: React.FC<DatasetDetailProps> = ({ dataset, isOpen, onClose 
       <DialogContent dividers>
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom>Task</Typography>
-          <Chip label={task} size="small" />
-          {subtask && subtask !== task && (
-            <Chip label={subtask} size="small" sx={{ ml: 1 }} />
+          <Chip label={dataset.task} size="small" />
+          {dataset.subtask && dataset.subtask !== dataset.task && (
+            <Chip label={dataset.subtask} size="small" sx={{ ml: 1 }} />
           )}
         </Box>
 
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom>Description</Typography>
-          <Typography variant="body1">{description || 'No description available'}</Typography>
+          <Typography variant="body1">{dataset.description || 'No description available'}</Typography>
         </Box>
 
         <Divider sx={{ my: 3 }} />
@@ -94,33 +82,33 @@ const DatasetDetail: React.FC<DatasetDetailProps> = ({ dataset, isOpen, onClose 
           <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
             <Paper elevation={0} sx={{ p: 2 }}>
               <Typography variant="subtitle1" fontWeight="bold">Area</Typography>
-              <Typography variant="body1">{area || 'N/A'}</Typography>
+              <Typography variant="body1">{dataset.area || 'N/A'}</Typography>
             </Paper>
           </Box>
           <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
             <Paper elevation={0} sx={{ p: 2 }}>
               <Typography variant="subtitle1" fontWeight="bold">Year Published</Typography>
-              <Typography variant="body1">{year_published || 'N/A'}</Typography>
+              <Typography variant="body1">{dataset.year_published || 'N/A'}</Typography>
             </Paper>
           </Box>
           <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
             <Paper elevation={0} sx={{ p: 2 }}>
               <Typography variant="subtitle1" fontWeight="bold">Dataset Size</Typography>
-              <Typography variant="body1">{dataset_size || 'N/A'}</Typography>
+              <Typography variant="body1">{dataset.dataset_size || 'N/A'}</Typography>
             </Paper>
           </Box>
           <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
             <Paper elevation={0} sx={{ p: 2 }}>
               <Typography variant="subtitle1" fontWeight="bold">License</Typography>
-              <Typography variant="body1">{license || 'N/A'}</Typography>
+              <Typography variant="body1">{dataset.license || 'N/A'}</Typography>
             </Paper>
           </Box>
           <Box sx={{ width: '100%' }}>
             <Paper elevation={0} sx={{ p: 2 }}>
               <Typography variant="subtitle1" fontWeight="bold">Modalities</Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                {modalitiesList.length > 0 ? 
-                  modalitiesList.map((modality, index) => (
+                {formatTasks(dataset.modalities).length > 0 ? 
+                  formatTasks(dataset.modalities).map((modality, index) => (
                     <Chip key={index} label={modality} size="small" />
                   )) : 
                   <Typography variant="body2">No modalities available</Typography>
@@ -132,8 +120,8 @@ const DatasetDetail: React.FC<DatasetDetailProps> = ({ dataset, isOpen, onClose 
             <Paper elevation={0} sx={{ p: 2 }}>
               <Typography variant="subtitle1" fontWeight="bold">Associated Tasks</Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                {associatedTasks.length > 0 ? 
-                  associatedTasks.map((task, index) => (
+                {formatTasks(dataset.associated_tasks).length > 0 ? 
+                  formatTasks(dataset.associated_tasks).map((task, index) => (
                     <Chip key={index} label={task} size="small" />
                   )) : 
                   <Typography variant="body2">No associated tasks available</Typography>
@@ -144,19 +132,46 @@ const DatasetDetail: React.FC<DatasetDetailProps> = ({ dataset, isOpen, onClose 
           <Box sx={{ width: '100%' }}>
             <Paper elevation={0} sx={{ p: 2 }}>
               <Typography variant="subtitle1" fontWeight="bold">Languages</Typography>
-              <Typography variant="body1">{languages || 'N/A'}</Typography>
+              <Typography variant="body1">{dataset.languages || 'N/A'}</Typography>
             </Paper>
           </Box>
         </Box>
 
         <Divider sx={{ my: 3 }} />
 
+        {/* Benchmark URLs Section */}
+        {formatBenchmarkUrls(dataset.benchmark_urls).length > 0 && (
+          <>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>Benchmarks</Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                {formatBenchmarkUrls(dataset.benchmark_urls).map((benchmark, index) => (
+                  <Box key={index} sx={{ width: { xs: '100%', md: 'calc(50% - 8px)' } }}>
+                    <Link 
+                      href={benchmark.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                    >
+                      <Typography variant="body2" noWrap>
+                        {benchmark.name}
+                      </Typography>
+                      <LaunchIcon fontSize="small" />
+                    </Link>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+            <Divider sx={{ my: 3 }} />
+          </>
+        )}
+
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom>External Links</Typography>
           <Stack spacing={2}>
-            {homepage_url && (
+            {dataset.homepage_url && (
               <Link 
-                href={homepage_url} 
+                href={dataset.homepage_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
@@ -165,9 +180,9 @@ const DatasetDetail: React.FC<DatasetDetailProps> = ({ dataset, isOpen, onClose 
                 <LaunchIcon fontSize="small" />
               </Link>
             )}
-            {pwc_url && (
+            {dataset.pwc_url && (
               <Link 
-                href={pwc_url} 
+                href={dataset.pwc_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
@@ -176,9 +191,9 @@ const DatasetDetail: React.FC<DatasetDetailProps> = ({ dataset, isOpen, onClose 
                 <LaunchIcon fontSize="small" />
               </Link>
             )}
-            {paper_url && (
+            {dataset.paper_url && (
               <Link 
-                href={paper_url} 
+                href={dataset.paper_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
@@ -195,6 +210,18 @@ const DatasetDetail: React.FC<DatasetDetailProps> = ({ dataset, isOpen, onClose 
           Close
         </Button>
       </DialogActions>
+    </>
+  );
+
+  return (
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      scroll="paper"
+    >
+      {dialogContent}
     </Dialog>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Table,
   TableHead,
@@ -14,7 +14,8 @@ import {
   Paper,
   Link,
   useMediaQuery,
-  useTheme
+  useTheme,
+  TablePagination
 } from '@mui/material';
 import LaunchIcon from '@mui/icons-material/Launch';
 import { Dataset } from '../types';
@@ -32,19 +33,39 @@ const DatasetTable: React.FC<DatasetTableProps> = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
+  // Pagination state
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(50);
+
+  // Pagination handlers
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   // Define columns based on screen size
   const columns = useMemo(() => {
     // Base columns that appear on all screen sizes
     const baseColumns = [
-      { Header: 'Name', accessor: 'dataset_id', width: isMobile ? '60%' : '60%' },
+      { Header: 'Name', accessor: 'dataset_id', width: isMobile ? '60%' : '40%' },
     ];
     
     // Papers with Code column now appears before Task
     const pwcColumn = [
       { Header: 'PWC-Link', accessor: 'pwc_url', width: isMobile ? '20%' : '10%' },
-      { Header: 'Task', accessor: 'task', width: isMobile ? '20%' : '20%' },
+      { Header: 'Task', accessor: 'task', width: isMobile ? '20%' : '15%' },
     ];
+    
+    // New count columns
+    const countColumns = !isMobile ? [
+      { Header: 'Benchmark Cnt', accessor: 'benchmark_cnt', width: '10%' },
+      { Header: 'Task Cnt', accessor: 'associated_task_cnt', width: '10%' },
+    ] : [];
     
     // Additional columns for larger screens
     const desktopColumns = [
@@ -56,8 +77,35 @@ const DatasetTable: React.FC<DatasetTableProps> = ({
     
     return isMobile 
       ? [...baseColumns, ...pwcColumn]
-      : [...baseColumns, ...pwcColumn, ...desktopColumns];
+      : [...baseColumns, ...pwcColumn, ...countColumns, ...desktopColumns];
   }, [isMobile]);
+
+  // Calculate benchmark and associated task counts
+  const datasetsWithCounts = useMemo(() => {
+    return datasets.map(dataset => {
+      // Count benchmarks
+      const benchmarkCount = dataset.benchmark_urls ? 
+        dataset.benchmark_urls.split(',').filter(url => url.trim().length > 0).length : 0;
+      
+      // Count associated tasks
+      const associatedTaskCount = dataset.associated_tasks ? 
+        dataset.associated_tasks.split(',').filter(task => task.trim().length > 0).length : 0;
+      
+      return {
+        ...dataset,
+        benchmark_cnt: benchmarkCount.toString(),
+        associated_task_cnt: associatedTaskCount.toString()
+      };
+    });
+  }, [datasets]);
+
+  // Get current page data
+  const currentPageData = useMemo(() => {
+    return datasetsWithCounts.slice(
+      page * rowsPerPage,
+      page * rowsPerPage + rowsPerPage
+    );
+  }, [datasetsWithCounts, page, rowsPerPage]);
 
   // Handle link click without triggering row selection
   const handleLinkClick = (e: React.MouseEvent) => {
@@ -72,7 +120,7 @@ const DatasetTable: React.FC<DatasetTableProps> = ({
     );
   }
 
-  if (datasets.length === 0) {
+  if (datasetsWithCounts.length === 0) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
         <Typography variant="h6" color="text.secondary">No datasets found matching your criteria</Typography>
@@ -103,7 +151,7 @@ const DatasetTable: React.FC<DatasetTableProps> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {datasets.map((dataset) => (
+            {currentPageData.map((dataset) => (
               <TableRow 
                 key={dataset.sno}
                 hover
@@ -202,8 +250,25 @@ const DatasetTable: React.FC<DatasetTableProps> = ({
           </TableBody>
         </Table>
       </TableContainer>
+      
+      {/* Pagination Controls */}
+      <TablePagination
+        component="div"
+        count={datasetsWithCounts.length}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        rowsPerPageOptions={[25, 50, 100, 250]}
+        labelRowsPerPage="Entries per page:"
+        sx={{ 
+          '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+            margin: 0,
+          }
+        }}
+      />
     </Box>
   );
 };
 
-export default React.memo(DatasetTable);
+export default DatasetTable;
