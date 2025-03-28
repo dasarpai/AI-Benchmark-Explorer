@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useMemo, ReactNode } from 'react';
-import { ThemeProvider as MuiThemeProvider, createTheme, Theme } from '@mui/material/styles';
+import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
 import { PaletteMode } from '@mui/material';
 
 // Define the context type
