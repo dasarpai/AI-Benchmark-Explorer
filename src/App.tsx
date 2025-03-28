@@ -1,39 +1,14 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, Box, Container, Typography, Alert, CircularProgress } from '@mui/material';
 import Header from './components/Header';
 import FilterPanel from './components/FilterPanel';
 import DatasetTable from './components/DatasetTable';
 import { Dataset, FilterState } from './types';
 import { parseCSV, getUniqueValues } from './utils/dataUtils';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Lazy load the detail component to improve initial load time
 const DatasetDetail = lazy(() => import('./components/DatasetDetail'));
-
-// Create a theme instance
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-    background: {
-      default: '#f5f5f5',
-    },
-  },
-  // Add this to improve performance
-  components: {
-    MuiTableCell: {
-      styleOverrides: {
-        root: {
-          padding: '8px 16px',
-        },
-      },
-    },
-  },
-});
 
 function App() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
@@ -203,7 +178,7 @@ function App() {
   };
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider>
       <CssBaseline />
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
         <Header />

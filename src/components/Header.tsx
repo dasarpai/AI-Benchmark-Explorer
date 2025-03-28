@@ -6,21 +6,16 @@ import {
   Box,
   Container,
   IconButton,
-  useTheme
+  Divider
 } from '@mui/material';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
-
-// Note: Material UI v7 uses a different theme approach than Chakra UI
-// Since we don't have a dark mode toggle in MUI setup yet, we'll just show the icon
-// but it won't toggle themes until we set up a theme context
+import SocialShare from './SocialShare';
+import { useThemeContext } from '../context/ThemeContext';
 
 const Header: React.FC = () => {
-  const theme = useTheme();
-  // This would normally toggle between light and dark mode
-  const handleToggleTheme = () => {
-    console.log('Theme toggle clicked - functionality to be implemented');
-  };
+  const { mode, toggleColorMode } = useThemeContext();
+  const isDarkMode = mode === 'dark';
 
   return (
     <AppBar position="static" sx={{ boxShadow: 2 }}>
@@ -35,12 +30,19 @@ const Header: React.FC = () => {
             </Typography>
           </Box>
           <Box sx={{ flexGrow: 1 }} />
+          
+          {/* Social Share Component */}
+          <SocialShare />
+          
+          <Divider orientation="vertical" flexItem sx={{ mx: 1, bgcolor: 'rgba(255,255,255,0.3)' }} />
+          
           <IconButton
             color="inherit"
-            onClick={handleToggleTheme}
+            onClick={toggleColorMode}
             edge="end"
+            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
           >
-            {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+            {isDarkMode ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
         </Toolbar>
       </Container>
