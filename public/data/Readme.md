@@ -192,7 +192,7 @@ If you want clean isolation, fast deploys, and maintainability:
 
 ## Multiple Deployement Platform / hosting options 
 
-### 🔹 **Frontend (React) — Free Hosting Options**
+### Frontend (React) — Free Hosting Options
 These are great for static frontend apps like React:
 
 1. **Netlify**
@@ -214,7 +214,7 @@ These are great for static frontend apps like React:
 
 ---
 
-### 🔹 **Backend (Flask) — Free Hosting Options**
+### Backend (Flask) — Free Hosting Options
 Flask needs a server (dynamic backend), so here are your best free options:
 
 1. **Render (free web service)**
